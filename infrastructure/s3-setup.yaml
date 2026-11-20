@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: S3 Bucket setup with versioning and public access blocking.
+
+Parameters:
+  BucketNamePrefix:
+    Type: String
+    Default: my-app-data
+    Description: A unique prefix for the S3 bucket name. Must be globally unique.
+
+Resources:
+  ApplicationBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      # Intrinsic function !Join combines the prefix with the region to ensure global uniqueness.
+      # Format: [Delimiter, [List of values to join]]
+      BucketName: !Join 
+        - "-"
+        -
+          - !Ref BucketNamePrefix
+          - !Ref "AWS::Region"  # Pseudo-parameter: automatically provides the region where the stack is deployed
+      
+      # Recommended Best Practices:
+      VersioningConfiguration:
+        Status: Enabled # Protects against accidental object deletion/overwriting
+      
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true # Ensures bucket is private by default
+        
+Outputs:
+  BucketNameOutput:
+    Description: The final, unique name of the S3 bucket
+    Value: !Ref ApplicationBucket
+    # Use !Sub or !Join to construct the ARN for use in other services/roles
+    # Exporting the output makes it available for other CloudFormation stacks (advanced)
+  BucketARN:
+    Description: The ARN of the S3 bucket
+    Value: !Join 
+      - ""
+      -
+        - "arn:aws:s3:::"
+        - !Ref ApplicationBucket
