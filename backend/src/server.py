@@ -7,13 +7,13 @@ from flask_cors import CORS
 from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 
-# 1. Load environment variables
+#  Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app) 
 
-# 2. Configure AWS Clients
+#  Configure AWS Clients
 # Note: We use the Session Token for both clients because you are in Learner Lab
 s3_client = boto3.client(
     's3',
@@ -104,7 +104,7 @@ def generate_upload_url():
         return jsonify({
             'uploadUrl': presigned_url,
             'viewUrl': view_url,
-            'key': object_name  # <--- CRITICAL FIX: We return the 'key' so Frontend can send it to Textract
+            'key': object_name  
         })
 
     except ClientError as e:
@@ -149,12 +149,12 @@ def analyze_receipt():
         
         print(f"Analyzing: {filename}")
 
-        # 1. Call AWS Textract
+        # Call AWS Textract
         response = textract.analyze_expense(
             Document={'S3Object': {'Bucket': BUCKET_NAME, 'Name': filename}}
         )
 
-        # 2. Extract Data
+        #  Extract Data
         store_name = "Unknown Store"
         total_amount = "---"
         date_str = "Unknown Date"
@@ -171,14 +171,14 @@ def analyze_receipt():
                 elif type_ == 'INVOICE_RECEIPT_DATE':
                     date_str = value
         
-        # 3. Generate View URL (for the frontend to display later)
+        #  Generate View URL (for the frontend to display later)
         view_url = s3_client.generate_presigned_url(
             'get_object',
             Params={'Bucket': BUCKET_NAME, 'Key': filename},
             ExpiresIn=3600
         )
 
-        # 4. SAVE TO DYNAMODB (The New Part!)
+        #  SAVE TO DYNAMODB (The New Part!)
         item = {
             'id': filename,         # PRIMARY KEY
             'store': store_name,
